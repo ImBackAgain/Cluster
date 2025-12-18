@@ -1,0 +1,9 @@
+<ui:UXML xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" noNamespaceSchemaLocation="../../UIElementsSchema/UIElements.xsd" editor-extension-mode="False">
+    <ui:Label text="This program creates copies of animation clips found in FBX files within the FBX Imports folder. You can specify a file and clip, or leave them blank to handle every FBX file and/or every clip in it." style="white-space: normal;" />
+    <ui:TextField label="File name" placeholder-text="" name="fileNameInput" />
+    <ui:TextField label="Object name" placeholder-text="" name="objNameInput" />
+    <ui:TextField label="Clip name" placeholder-text="" name="clipNameInput" />
+    <ui:Button text="Do thing" name="button1" />
+    <ui:Button text="Dummy 1" name="button2" />
+    <ui:Button text="Dummy 2" name="button3" />
+</ui:UXML>
