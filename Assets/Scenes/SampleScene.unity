@@ -148,7 +148,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 88489a9e91dd7ae4a82b90ef70b9ae78, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::TimeKeeper
-  globalMult: 0.091
+  globalMult: 1
 --- !u!4 &69437046
 Transform:
   m_ObjectHideFlags: 0
