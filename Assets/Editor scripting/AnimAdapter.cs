@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using UnityEditor;
 using UnityEditor.Animations;
-//using AniCon = UnityEditor.Animations.AnimatorController;
 using UnityEngine;
 using UnityEngine.UIElements;
 using Consts = Utils.Constants;
@@ -127,6 +126,8 @@ public class AnimAdapter : EditorWindow
 
                     Debug.Log("Copying from file ‘" + filePath + "’ clip ‘" + fullClipName + "’?");
 
+                    Thingy(filePath);
+
                     //Remember to double-check that the file isn’t a scene asset when you start looping through files.
 
                     AnimationClip[] clipAssets = AssetDatabase.LoadAllAssetsAtPath(filePath).OfType<AnimationClip>().ToArray();
@@ -148,6 +149,22 @@ public class AnimAdapter : EditorWindow
             }
         }
     }
+
+    
+    /// <summary>
+    /// Doesn’t work
+    /// </summary>
+    /// <param name="filePath"></param>
+    private void Thingy(string filePath)
+    {
+        ModelImporter i = AssetImporter.GetAtPath(filePath) as ModelImporter;
+
+        Debug.Log(i);
+
+        i.bakeAxisConversion = true;
+        i.SaveAndReimport();
+    }
+    
 
     void CreatePermutantCopy(AnimationClip source)
     {
@@ -231,9 +248,9 @@ public class AnimAdapter : EditorWindow
                     }
                     else
                     {
-                        for (int j = 0; j < Cluster.boneNames.Length; j++)
+                        for (int j = 0; j < 6; j++)
                         {
-                            if (channelName.StartsWith("m_LocalPosition") && boneName == Cluster.boneNames[j])
+                            if (channelName.StartsWith("m_LocalPosition") && boneName == ((BodyPart)j).ToString())
                             {
                                 //Debug.Log("Core bone curve. ‘" + boneName + "’ prop ‘" + channelName + "’");
                                 boneCurves[j, axis] = curve;
@@ -262,7 +279,7 @@ public class AnimAdapter : EditorWindow
             copy.ClearCurves();
             for (int i = 0; i < 6; i++)
             {
-                string path = Cluster.boneNames[i];
+                string path = ((BodyPart)i).ToString();
 
                 //EditorCurveBinding binder = new EditorCurveBinding();
                 //binder.path = Cluster.boneNames[i];

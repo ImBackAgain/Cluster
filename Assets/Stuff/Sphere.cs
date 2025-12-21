@@ -19,7 +19,9 @@ public class Sphere : MonoBehaviour
             {
                 string matName = ((SphereColour)i).ToString();
 
-                mats[i] = AssetDatabase.LoadMainAssetAtPath("Assets/Mats/Mat " + matName + ".mat") as Material;
+                mats[i] = 
+                    AssetDatabase.LoadMainAssetAtPath("Assets/Player/Mats/Mat " + matName + ".mat") 
+                    as Material;
 
                 //Debug.Log(matName + " found to be " +  mats[i]);
             }

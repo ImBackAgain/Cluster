@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using UnityEditor;
 using UnityEngine;
 using Rand = UnityEngine.Random;
 
@@ -22,14 +23,16 @@ public enum SphereColour
 
 public class Cluster : MonoBehaviour
 {
+    [SerializeField]
     Sphere[] spheresByColour;
 
     [SerializeField]
     Sphere[] spheresByPosition;
     
+    [SerializeField]
     Transform[] bones;
-    public static readonly string[] boneNames = 
-        new string[] { "Foot L", "Foot R", "Hand L", "Hand R", "Torso", "Head" };
+    /*public static readonly string[] boneNames = 
+        new string[] { "Foot L", "Foot R", "Hand L", "Hand R", "Torso", "Head" };*/
 
 
     void Start()
@@ -39,17 +42,20 @@ public class Cluster : MonoBehaviour
          * The exported clip works fine.  When I make a copy of it, the result is
          * bugged in some inscrutable way that makes it refuse to play.
          */
-        spheresByColour = new Sphere[boneNames.Length];
-        spheresByPosition = new Sphere[boneNames.Length];
+        spheresByColour = new Sphere[6];
+        spheresByPosition = new Sphere[6];
 
         ClustAnEve model = GetComponentInChildren<ClustAnEve>();
         model.SetParent(this);
 
         PopulateBoneArray();
 
+        GameObject partPref = 
+            AssetDatabase.LoadMainAssetAtPath("Assets/Player/Prefabs/Part.prefab")
+            as GameObject;
+
         for (int i = 0; i < spheresByColour.Length; i++)
         {
-            GameObject partPref = Resources.Load<GameObject>("Part");
 
             GameObject partObj = Instantiate(partPref);
             spheresByColour[i] = spheresByPosition[i]
@@ -94,12 +100,12 @@ public class Cluster : MonoBehaviour
         if (bones == null || bones.Length != 6 || bones[0] == null)
         {
             bones = new Transform[6];
-            foreach (var bone in transform.GetComponentsInChildren<Transform>())
+            foreach (var childObj in transform.GetComponentsInChildren<Transform>())
             {
-                int i = Array.IndexOf(boneNames, bone.name);
-                if (i != -1)
+                if (Enum.TryParse<BodyPart>(childObj.name, out var p))
                 {
-                    bones[i] = bone;
+                    int i = (int)p;
+                    bones[i] = childObj;
                 }
             }
         }
@@ -112,7 +118,7 @@ public class Cluster : MonoBehaviour
 
         foreach(Transform bone in bones)
         {
-            Gizmos.DrawWireSphere(bone.position, 0.1f);
+            Gizmos.DrawWireSphere(bone.position, 0.2f);
         }
     }
 }
