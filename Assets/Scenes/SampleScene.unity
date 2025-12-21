@@ -148,7 +148,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 88489a9e91dd7ae4a82b90ef70b9ae78, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::TimeKeeper
-  globalMult: 1
+  globalMult: 0.1
 --- !u!4 &69437046
 Transform:
   m_ObjectHideFlags: 0
@@ -428,28 +428,6 @@ MonoBehaviour:
   m_ShadowLayerMask: 1
   m_RenderingLayers: 1
   m_ShadowRenderingLayers: 1
---- !u!95 &537033264
-Animator:
-  serializedVersion: 7
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 919132147546472260}
-  m_Enabled: 1
-  m_Avatar: {fileID: 0}
-  m_Controller: {fileID: 9100000, guid: 30fc40b329c1093409f2fca042e86f0b, type: 2}
-  m_CullingMode: 0
-  m_UpdateMode: 0
-  m_ApplyRootMotion: 0
-  m_LinearVelocityBlending: 0
-  m_StabilizeFeet: 0
-  m_AnimatePhysics: 0
-  m_WarningMessage: 
-  m_HasTransformHierarchy: 1
-  m_AllowConstantClipSamplingOptimization: 1
-  m_KeepAnimatorStateOnDisable: 0
-  m_WriteDefaultValuesOnDisable: 0
 --- !u!114 &537033265
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -462,18 +440,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: caccc30ea1e51a748b1898144483c87c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::AnimEventer
---- !u!114 &537033266
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 919132147546472260}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 37e9c30dff0e201459656035f4985089, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::AnimTime
 --- !u!1 &832575517
 GameObject:
   m_ObjectHideFlags: 0
@@ -586,8 +552,8 @@ Transform:
   - {fileID: 3723446622433545342}
   - {fileID: 5573761180640587153}
   - {fileID: 5005953330163698270}
-  - {fileID: 7876023681776920445}
   - {fileID: 6385452221835811958}
+  - {fileID: 7876023681776920445}
   m_Father: {fileID: 968241688}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &919132147546472260
@@ -599,9 +565,9 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 543450652086789630}
-  - component: {fileID: 537033264}
   - component: {fileID: 537033265}
-  - component: {fileID: 537033266}
+  - component: {fileID: 919132147546472261}
+  - component: {fileID: 919132147546472262}
   m_Layer: 0
   m_Name: Model
   m_TagString: Untagged
@@ -609,6 +575,40 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
+--- !u!95 &919132147546472261
+Animator:
+  serializedVersion: 7
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 919132147546472260}
+  m_Enabled: 1
+  m_Avatar: {fileID: 0}
+  m_Controller: {fileID: 9100000, guid: 30fc40b329c1093409f2fca042e86f0b, type: 2}
+  m_CullingMode: 0
+  m_UpdateMode: 0
+  m_ApplyRootMotion: 0
+  m_LinearVelocityBlending: 0
+  m_StabilizeFeet: 0
+  m_AnimatePhysics: 0
+  m_WarningMessage: 
+  m_HasTransformHierarchy: 1
+  m_AllowConstantClipSamplingOptimization: 1
+  m_KeepAnimatorStateOnDisable: 0
+  m_WriteDefaultValuesOnDisable: 0
+--- !u!114 &919132147546472262
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 919132147546472260}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 37e9c30dff0e201459656035f4985089, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::AnimTime
 --- !u!1 &934685696573169979
 GameObject:
   m_ObjectHideFlags: 0

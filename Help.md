@@ -48,7 +48,7 @@ Anyway, the settings are:
 
 ## Unity
 
-The files should be put into ‘Assets/FBX Imports’ to get them processed by the
+The files should be put into ‘Assets/FBX Imports’.  Before anything else, get the file up in the Inspector, check ‘Bake axis conversion’, and hit Apply.  Then they’re ready to get processed by the
 
 ### Animation Adapter
 

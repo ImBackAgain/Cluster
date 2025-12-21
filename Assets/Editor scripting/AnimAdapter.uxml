@@ -1,9 +1,14 @@
 <ui:UXML xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" noNamespaceSchemaLocation="../../UIElementsSchema/UIElements.xsd" editor-extension-mode="False">
-    <ui:Label text="This program creates copies of animation clips found in FBX files within the FBX Imports folder. You can specify a file and clip, or leave them blank to handle every FBX file and/or every clip in it." style="white-space: normal;" />
-    <ui:TextField label="File name" placeholder-text="" name="fileNameInput" />
-    <ui:TextField label="Object name" placeholder-text="" name="objNameInput" />
-    <ui:TextField label="Clip name" placeholder-text="" name="clipNameInput" />
-    <ui:Button text="Do thing" name="button1" />
-    <ui:Button text="Dummy 1" name="button2" />
-    <ui:Button text="Dummy 2" name="button3" />
+    <ui:ScrollView>
+        <ui:Label text="This part creates copies of animation clips found in FBX files within the FBX Imports folder.  You can specify multiple items using comma-spaces.  The second field is optional.  The third is, too, if you use the all clips button." style="white-space: normal;" />
+        <ui:TextField label="File name" name="fileNameInput" />
+        <ui:TextField label="Object name" name="objNameInput" />
+        <ui:TextField label="Clip name" name="clipNameInput" />
+        <ui:Button text="This model/clip of this file" name="buttonSpec" />
+        <ui:Button text="All clips of this file" name="buttonAllClips" />
+        <ui:Label text="This button assigns clips in Assets/Animations/Player to matching-named states in the Animation Controller Player AniCon in the same directory." style="white-space: normal;" />
+        <ui:Button text="Assign clips to controller" name="buttonCont" style="white-space: normal;" />
+        <ui:Button text="Dummy 1" name="button2" />
+        <ui:Button text="Dummy 2" name="button3" />
+    </ui:ScrollView>
 </ui:UXML>

@@ -2,6 +2,8 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEditor;
+using UnityEditor.Animations;
+//using AniCon = UnityEditor.Animations.AnimatorController;
 using UnityEngine;
 using UnityEngine.UIElements;
 using Consts = Utils.Constants;
@@ -11,44 +13,20 @@ public class AnimAdapter : EditorWindow
     [SerializeField]
     private VisualTreeAsset m_VisualTreeAsset = default;
 
-    [MenuItem("Window/UI Toolkit/AnimAdapter")]
-    public static void ShowExample()
-    {
-        AnimAdapter wnd = GetWindow<AnimAdapter>();
-        wnd.titleContent = new GUIContent("Animation adapter");
-    }
-
-    public void CreateGUI()
-    {
-        // Each editor window contains a root VisualElement object
-        VisualElement root = rootVisualElement;
-
-        // Instantiate UXML
-        VisualElement labelFromUXML = m_VisualTreeAsset.Instantiate();
-        root.Add(labelFromUXML);
-
-        root.Q<Button>("button1")
-            .RegisterCallback<ClickEvent>(OtherOnButtonClick);
-
-
-        root.Q<TextField>("fileNameInput").
-            RegisterCallback<ChangeEvent<string>>(OnFileNameInput);
-        root.Q<TextField>("clipNameInput").
-            RegisterCallback<ChangeEvent<string>>(OnClipNameInput);
-        root.Q<TextField>("objNameInput").
-            RegisterCallback<ChangeEvent<string>>(OnObjetNameInput);
-
-
-        root.Q<Button>("button2").RegisterCallback<ClickEvent>(DoNonsense);
-        root.Q<Button>("button3").RegisterCallback<ClickEvent>(DoMoreNonsense);
-
-        fileName = "Art";
-    }
-
-    const string MODEL_PATH = "Assets/FBX Imports/";
+    const string MODEL_PATH = "Assets/Player/FBX Imports/";
+    const string ANIMATION_PATH = "Assets/Player/Animations/";
+    const string INPUT_SEP = ", "; //Used in the text fields of this window
     string fileName = "";
     string clipName = "";
     string objName = "";
+
+    //When stringifying a perm, the result consists of six separate ‘swaps’ in order.
+    //They are separated by this.
+    const char SWAP_SEP = ':';
+    //Each set consists of a target body part (number), followed by the ‘future position’
+    //coordinate values.  They are separated by this.
+    const char DATA_SEP = '/';
+
 
     class CurveIngredients
     {
@@ -64,6 +42,50 @@ public class AnimAdapter : EditorWindow
             this.curve = curve;
         }
     }
+
+    [MenuItem("Window/UI Toolkit/AnimAdapter")]
+    public static void ShowExample()
+    {
+        AnimAdapter wnd = GetWindow<AnimAdapter>();
+        wnd.titleContent = new GUIContent("Animation adapter");
+    }
+
+
+    public void CreateGUI()
+    {
+        // Each editor window contains a root VisualElement object
+        VisualElement root = rootVisualElement;
+
+        // Instantiate UXML
+        VisualElement labelFromUXML = m_VisualTreeAsset.Instantiate();
+        root.Add(labelFromUXML);
+
+
+        root.Q<TextField>("fileNameInput").
+            RegisterCallback<ChangeEvent<string>>(OnFileNameInput);
+        root.Q<TextField>("clipNameInput").
+            RegisterCallback<ChangeEvent<string>>(OnClipNameInput);
+        root.Q<TextField>("objNameInput").
+            RegisterCallback<ChangeEvent<string>>(OnObjetNameInput);
+
+
+
+        root.Q<Button>("buttonSpec")
+            .RegisterCallback<ClickEvent>(OnClickCopySpec);
+
+        root.Q<Button>("buttonAllClips")
+            .RegisterCallback<ClickEvent>(OnClickCopyAll);
+
+        root.Q<Button>("buttonCont")
+            .RegisterCallback<ClickEvent>(OnClickCont);
+
+
+        root.Q<Button>("button2").RegisterCallback<ClickEvent>(DoNonsense);
+        root.Q<Button>("button3").RegisterCallback<ClickEvent>(DoMoreNonsense);
+
+        fileName = "Art";
+    }
+
     private void OnFileNameInput(ChangeEvent<string> evt)
     {
         fileName = evt.newValue;
@@ -77,22 +99,33 @@ public class AnimAdapter : EditorWindow
         objName = evt.newValue;
     }
 
-    const string INPUT_SEP = ", ";
 
-    private void OtherOnButtonClick(ClickEvent evt)
+    private void OnClickCopyAll(ClickEvent evt)
+    {
+        CopyAnimsFromFile(true);
+    }
+
+    private void OnClickCopySpec(ClickEvent evt)
+    {
+        CopyAnimsFromFile(false);
+    }
+
+
+    void CopyAnimsFromFile(bool allClips)
     {
         //TODO: we loop through every clip in the file for every clipName in the input
         foreach (string fName in fileName.Split(INPUT_SEP))
         {
             foreach (string cName in clipName.Split(INPUT_SEP))
             {
+                string newName = cName;
                 foreach (string oName in objName.Split(INPUT_SEP))
                 {
                     string filePath = MODEL_PATH + fName + ".fbx";
 
-                    string fullClipName = oName + "|" + cName;
+                    string fullClipName = oName == "" ? cName : (oName + "|" + cName);
 
-                    Debug.Log("So file ‘" + filePath + "’ clip ‘" + fullClipName + "’?");
+                    Debug.Log("Copying from file ‘" + filePath + "’ clip ‘" + fullClipName + "’?");
 
                     //Remember to double-check that the file isn’t a scene asset when you start looping through files.
 
@@ -100,30 +133,13 @@ public class AnimAdapter : EditorWindow
 
                     foreach (AnimationClip clip in clipAssets)
                     {
-                        if (clip.name == fullClipName)
+                        if (allClips && !clip.name.StartsWith("__preview__") && !clip.name.EndsWith("Builder"))
                         {
-                            Debug.Log("Found clip " + fullClipName);
-
-                            string newFilePath = MODEL_PATH + cName + ".anim";
-
-                            if (AssetDatabase.AssetPathExists(newFilePath))
-                            {
-                                Debug.Log("Aborting because clip already exists: " + newFilePath);
-                            }
-                            else
-                            {
-                                AnimationClip copy = CreateCopyWithPerms(clip);
-
-                                if (cName.EndsWith("Cyc"))
-                                {
-                                    AnimationUtility.SetAnimationClipSettings(copy, new AnimationClipSettings() { loopTime = true });
-                                }
-
-
-                                AssetDatabase.CreateAsset(copy, newFilePath);
-                                Debug.Log("Copy created");
-                            }
-
+                            CreatePermutantCopy(clip);
+                        }
+                        else if (clip.name == fullClipName)
+                        {
+                            CreatePermutantCopy(clip);
                             break;
                         }
                     }
@@ -133,105 +149,104 @@ public class AnimAdapter : EditorWindow
         }
     }
 
-    /// <summary>
-    /// Returns an Animation clip that contains all the data as the given clip,
-    /// plus events correponding to permutations.  Look here if the function that
-    /// shuold be called by said events has changed in any way.
-    /// </summary>
-    /// <param name="originalClip"></param>
-    /// <returns></returns>
-    AnimationClip CreateCopyWithPerms(AnimationClip originalClip)
+    void CreatePermutantCopy(AnimationClip source)
     {
-        AnimationClip copy = new();
+        Debug.Log("Found clip " + source);
 
-        // We have four tasks, sort of.  Three and a half, maybe.
-        //
-        // First, we’ll recreate every curve with the same binding in the new clip.
-        //
-        // Then we will record every ‘Perm’ keyframe.  While doing so, we will
-        // read the Perm’s position curves to find the times and permutations for
-        // each permutation event.  There’s more, but we’ll get to it.
-        //
-        // The next task is to find the ‘future positions’ for each permutation.
-        // This is the bone positions on the frame after the event, for the bone
-        // that a sphere will be following after the permutation is complete.
-        //
-        // This means recording all the bones’ key frames on our first pass
-        // through so we can refer to them again when setting up the events.
-        //
-        // Finally, we want to try adding a very tightly spaced key on the pre-
-        // transition side that goes all the way up to the post-transition position.
+        string newFilePath = ANIMATION_PATH + source.name.Split("|").Last() + ".anim";
 
-        // This is for recreating the existing curves
-        //CurveIngredients[] curveData;
-
-        //This holds the times and permutations for the events
-        Dictionary<float, Vector3> permFrames = new();
-
-        //This will hold all the main bone’s positions, to get us the
-        //future positions for the events
-        AnimationCurve[,] boneCurves = new AnimationCurve[6, 3];
-
-
-        EditorCurveBinding[] bindings = AnimationUtility.GetCurveBindings(originalClip);
-        //curveData = new CurveIngredients[bindings.Length];
-
-        for (int i = 0; i < bindings.Length; i++)
+        if (AssetDatabase.AssetPathExists(newFilePath))
         {
-            EditorCurveBinding binding = bindings[i];
-            AnimationCurve curve = new AnimationCurve();
-            curve.CopyFrom(AnimationUtility.GetEditorCurve(originalClip, binding));
-
-            string boneName = binding.path;
-            string channelName = binding.propertyName;
-
-            //curveData[i] = new(boneName, binding.type, channelName, curve);
-
-            //All permutation things onnly care about m_LocalPosition curves
-
-            if (channelName.StartsWith("m_LocalPosition"))
-            {
-                int axis = channelName.Last() - 'x';
-                //Debug.Log("Perm curve? ‘" + boneName + "’ prop ‘" + channelName + "’");
-                //Debug.Log("Last character was " + channelName.Last() + "; selector is " + axis);
-
-                //Get permutations and times
-                if (boneName == "Perm")
-                {
-                    Debug.Log(binding.type);
-                    foreach (Keyframe key in curve.keys)
-                    {
-                        if (permFrames.TryGetValue(key.time, out Vector3 p))
-                        {
-                            p[axis] = key.value;
-                            permFrames[key.time] = p;
-                        }
-                        else
-                        {
-                            p[axis] = key.value;
-                            permFrames.Add(key.time, p);
-                        }
-                    }
-                }
-                else
-                {
-                    for (int j = 0; j < Cluster.boneNames.Length; j++)
-                    {
-                        if (channelName.StartsWith("m_LocalPosition") && boneName == Cluster.boneNames[j])
-                        {
-                            //Debug.Log("Core bone curve. ‘" + boneName + "’ prop ‘" + channelName + "’");
-                            boneCurves[j, axis] = curve;
-                            break;
-                        }
-                    }
-                }
-            }
-            //End of loop over curves.
+            Debug.Log("Aborting because clip already exists: " + newFilePath);
         }
-
-        List<AnimationEvent> permutationEvents = new();
-
+        else
         {
+            AnimationClip copy = new();
+
+            // We have four tasks, sort of.  Three and a half, maybe.
+            //
+            // First, we’ll recreate every curve with the same binding in the new clip.
+            //
+            // Then we will record every ‘Perm’ keyframe.  While doing so, we will
+            // read the Perm’s position curves to find the times and permutations for
+            // each permutation event.  There’s more, but we’ll get to it.
+            //
+            // The next task is to find the ‘future positions’ for each permutation.
+            // This is the bone positions on the frame after the event, for the bone
+            // that a sphere will be following after the permutation is complete.
+            //
+            // This means recording all the bones’ key frames on our first pass
+            // through so we can refer to them again when setting up the events.
+            //
+            // Finally, we want to try adding a very tightly spaced key on the pre-
+            // transition side that goes all the way up to the post-transition position.
+
+            //This holds the times and permutations for the events
+            Dictionary<float, Vector3> permFrames = new();
+
+            //This will hold all the main bone’s positions, to get us the
+            //future positions for the events
+            AnimationCurve[,] boneCurves = new AnimationCurve[6, 3];
+
+
+            EditorCurveBinding[] bindings = AnimationUtility.GetCurveBindings(source);
+            //curveData = new CurveIngredients[bindings.Length];
+
+            for (int i = 0; i < bindings.Length; i++)
+            {
+                EditorCurveBinding binding = bindings[i];
+                AnimationCurve curve = new AnimationCurve();
+                curve.CopyFrom(AnimationUtility.GetEditorCurve(source, binding));
+
+                string boneName = binding.path;
+                string channelName = binding.propertyName;
+
+                //curveData[i] = new(boneName, binding.type, channelName, curve);
+
+                //All permutation things onnly care about m_LocalPosition curves
+
+                if (channelName.StartsWith("m_LocalPosition"))
+                {
+                    int axis = channelName.Last() - 'x';
+                    //Debug.Log("Perm curve? ‘" + boneName + "’ prop ‘" + channelName + "’");
+                    //Debug.Log("Last character was " + channelName.Last() + "; selector is " + axis);
+
+                    //Get permutations and times
+                    if (boneName == "Perm")
+                    {
+                        //Debug.Log(binding.type);
+                        foreach (Keyframe key in curve.keys)
+                        {
+                            if (permFrames.TryGetValue(key.time, out Vector3 p))
+                            {
+                                p[axis] = key.value;
+                                permFrames[key.time] = p;
+                            }
+                            else
+                            {
+                                p[axis] = key.value;
+                                permFrames.Add(key.time, p);
+                            }
+                        }
+                    }
+                    else
+                    {
+                        for (int j = 0; j < Cluster.boneNames.Length; j++)
+                        {
+                            if (channelName.StartsWith("m_LocalPosition") && boneName == Cluster.boneNames[j])
+                            {
+                                //Debug.Log("Core bone curve. ‘" + boneName + "’ prop ‘" + channelName + "’");
+                                boneCurves[j, axis] = curve;
+                                break;
+                            }
+                        }
+                    }
+                }
+                //End of loop over curves.
+            }
+
+            List<AnimationEvent> permutationEvents = new();
+
             foreach (float time in permFrames.Keys)
             {
                 Vector3 coords = permFrames[time];
@@ -241,41 +256,45 @@ public class AnimAdapter : EditorWindow
                     permutationEvents.Add(evt);
                 }
             }
-        }
 
-        AnimationUtility.SetAnimationEvents(copy, permutationEvents.ToArray());
+            AnimationUtility.SetAnimationEvents(copy, permutationEvents.ToArray());
 
-        //foreach (var c in curveData)
-        //{
-        //    copy.SetCurve(c.relativePath, c.type, c.propertyName, c.curve);
-        //}
-
-        copy.ClearCurves();
-        for (int i = 0; i < 6; i++)
-        {
-            EditorCurveBinding binder = new EditorCurveBinding();
-            binder.path = Cluster.boneNames[i];
-            //copy.SetCurve(path, typeof(Transform), "m_LocalPosition", new AnimationCurve());
-            for (int j = 0; j < 3; j++)
+            copy.ClearCurves();
+            for (int i = 0; i < 6; i++)
             {
-                AnimationCurve curve = boneCurves[i, j];
-                binder.propertyName = "m_LocalPosition." + (char)('x' + j);
-                binder.type = typeof(Transform);
+                string path = Cluster.boneNames[i];
 
-                AnimationUtility.SetEditorCurve(copy, binder, curve);
-                //copy.SetCurve(path, typeof(Transform), prop, curve);
+                //EditorCurveBinding binder = new EditorCurveBinding();
+                //binder.path = Cluster.boneNames[i];
+                
+                for (int j = 0; j < 3; j++)
+                {
+                    AnimationCurve curve = boneCurves[i, j];
+
+                    string prop = "m_LocalPosition." + (char)('x' + j);
+
+                    copy.SetCurve(path, typeof(Transform), prop, curve);
+
+                    //binder.propertyName = "m_LocalPosition." + (char)('x' + j);
+                    //binder.type = typeof(Transform);
+
+                    //AnimationUtility.SetEditorCurve(copy, binder, curve);
+                }
             }
+
+
+            if (source.name.EndsWith("Cyc"))
+            {
+                AnimationClipSettings s = AnimationUtility.GetAnimationClipSettings(source);
+                s.loopTime = true;
+                AnimationUtility.SetAnimationClipSettings(copy, s);
+            }
+
+            AssetDatabase.CreateAsset(copy, newFilePath);
+            Debug.Log("Copy created at " + newFilePath);
+
         }
-
-        return copy;
     }
-
-    //The string consists of six sets of arguments for the BeginTransition method
-    //separated by this
-    const char SWAP_SEP = ':';
-
-    //Each set consists of 
-    const char DATA_SEP = '/';
 
     /// <summary>
     /// Modifies all permuted curves to include an ‘almost’ keyframe very close to
@@ -437,82 +456,48 @@ public class AnimAdapter : EditorWindow
 
         return output;
     }
-    /*
-    void OnButtonClick(ClickEvent evt)
+
+    private void OnClickCont(ClickEvent evt)
     {
-        string msg = "Loading assets at " + fileName + "\n";
+        AnimatorController controller = 
+            AssetDatabase.LoadMainAssetAtPath(ANIMATION_PATH + "Player AniCon.controller")
+            as AnimatorController;
 
-        string[] allGUIDs = AssetDatabase.FindAssets("t:object", new[] { "Assets/" + fileName });
-
-        foreach (string gUID in allGUIDs)
+        foreach(AnimatorControllerLayer l in controller.layers)
         {
-            string path = AssetDatabase.GUIDToAssetPath(gUID);
-            //Debug.Log("Opening file at path " + path);
-            //ModelImporterStuff(path);
+            Debug.Log("Layer " + l.name);
 
-            msg += "\nFile path" + path + LoadAssetStuff(path);
-        }
-
-        Debug.Log(msg);
-    }
-
-    void ModelImporterStuff(string path)
-    {
-        ModelImporter mimp = AssetImporter.GetAtPath(path) as ModelImporter;
-
-        if (mimp != null)
-        {
-            foreach (var clip in mimp.clipAnimations)
+            foreach(ChildAnimatorState s in l.stateMachine.states)
             {
-                Debug.Log(clip.name);
-                clip.name = "Boo " + clip.name;
-            }
-        }
-    }
+                Debug.Log("State name " + s.state.name);
 
-    string LoadAssetStuff(string path)
-    {
-        string msg = "";
-
-        if (AssetDatabase.LoadMainAssetAtPath(path) is SceneAsset)
-        {
-            return "Loaded scene at " + path;
-        }
-
-        var clipAssets = AssetDatabase.LoadAllAssetsAtPath(path).OfType<AnimationClip>().ToArray();
-
-        foreach (AnimationClip clip in clipAssets)
-        {
-            if (clip.name.StartsWith("__preview__"))
-            {
-                msg += clip.name + " is a preview\n";
-            }
-            else
-            {
-                msg += clip.name + " is not a preview\n";
-
-                var bindings = AnimationUtility.GetCurveBindings(clip);
-
-                foreach (EditorCurveBinding binding in bindings)
+                if (s.state.motion == null)
                 {
-                    AnimationCurve curve = AnimationUtility.GetEditorCurve(clip, binding);
+                    string n = s.state.name;
 
-                    //Keyframe x = curve.keys[0];
-                    //
-                    //x.value = 32;
-                    //
-                    //curve.MoveKey(0, x);
+                    AnimationClip clip =
+                        AssetDatabase.LoadMainAssetAtPath(ANIMATION_PATH + n + ".anim")
+                        as AnimationClip;
 
-                    Debug.Log($"Binding: {binding}\nPath: {binding.path}\nProp: {binding.propertyName}");
 
-                    //AnimationUtility.SetEditorCurve(clip, binding, curve);
+                    if (clip != null)
+                    {
+                        Debug.Log("Found clip " + clip);
+                        s.state.motion = clip;
+                    }
+                    else
+                    {
+                        Debug.Log("Failed to find clip " + n);
+                    }
+                }
+                else
+                {
+                    Debug.Log("Motion present " + s.state.motion);
                 }
             }
         }
-
-        return msg;
     }
-    */
+
 
     #region Testing
     void DoNonsense(ClickEvent _)

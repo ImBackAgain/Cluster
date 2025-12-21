@@ -6,7 +6,6 @@ using Rand = UnityEngine.Random;
 /// Attach to any object with an AnimatorController that needs to follow
 /// TimeKeeper for its animation speed.
 /// </summary>
-[RequireComponent(typeof(Animator))]
 public class AnimTime : MonoBehaviour
 {
     Animator animer;

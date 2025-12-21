@@ -35,10 +35,9 @@ public class Cluster : MonoBehaviour
     void Start()
     {
         Debug.Log("Hi!  Look over here for some comments about immediate tasks.");
-        /* The cyclic animations are not labelled as such in Blender.
-         * Also, the cartwheel animation is all mucked up.  I basically worked on
-         * the swapping setup a lot without looking at it, so it needs to start pretty 
-         * much from scratch.
+        /* The idle animation has indecipherable problems.
+         * The exported clip works fine.  When I make a copy of it, the result is
+         * bugged in some inscrutable way that makes it refuse to play.
          */
         spheresByColour = new Sphere[boneNames.Length];
         spheresByPosition = new Sphere[boneNames.Length];
@@ -83,7 +82,7 @@ public class Cluster : MonoBehaviour
         {
             spheresByPosition[perm.src].BeginTransition((BodyPart)perm.dst, perm.fPos);
             
-            newByPosition[perm.src] = spheresByPosition[perm.dst];
+            newByPosition[perm.dst] = spheresByPosition[perm.src];
         }
 
         spheresByPosition = newByPosition;
